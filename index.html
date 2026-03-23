@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自媒體行銷工具箱</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft JhengHei',sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px}
+:root{
+  --purple:#534AB7;--purple-light:#EEEDFE;--purple-mid:#AFA9EC;--purple-dark:#3C3489;
+  --teal:#1D9E75;--teal-light:#E1F5EE;--teal-dark:#085041;
+  --coral:#D85A30;--coral-light:#FAECE7;--coral-dark:#712B13;
+  --amber:#EF9F27;--amber-light:#FAEEDA;--amber-dark:#633806;
+  --blue:#378ADD;--blue-light:#E6F1FB;--blue-dark:#0C447C;
+  --border:#e8e6df;--text:#1a1a1a;--text-muted:#6b6965;--text-hint:#9a9895;
+  --radius:10px;--radius-sm:7px
+}
+.app{display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:0}
+.topbar-brand{font-size:15px;font-weight:700;color:var(--purple);padding:14px 0;margin-right:24px;white-space:nowrap}
+.nav-tabs{display:flex;gap:0;flex-wrap:wrap}
+.nav-tab{padding:14px 16px;font-size:13px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:600}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:8px 0}
+.api-badge{font-size:11px;padding:4px 10px;border-radius:999px;font-weight:500}
+.api-ok{background:var(--teal-light);color:var(--teal-dark)}
+.api-err{background:#FCEBEB;color:#A32D2D}
+
+/* workflow progress bar */
+.workflow-bar{background:#fff;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:0;overflow-x:auto}
+.wf-step{display:flex;align-items:center;gap:0;flex-shrink:0}
+.wf-node{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:1.5px solid var(--border);background:#fff;color:var(--text-muted);font-family:inherit}
+.wf-node.done{background:var(--teal-light);color:var(--teal-dark);border-color:#5DCAA5}
+.wf-node.active{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-mid)}
+.wf-node.locked{opacity:.45;cursor:default}
+.wf-arrow{color:var(--border);font-size:14px;margin:0 4px;flex-shrink:0}
+
+.main{max-width:900px;margin:0 auto;padding:20px 16px;width:100%}
+.page{display:none}
+.page.active{display:block}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.lbl{font-size:11px;color:var(--text-muted);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.hint{font-size:11px;color:var(--text-hint);margin-top:3px;line-height:1.5}
+.mb10{margin-bottom:10px}
+.mb12{margin-bottom:12px}
+
+input[type=text],input[type=password],textarea,select{width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--purple)}
+textarea{resize:vertical;min-height:68px;line-height:1.6}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+
+.chip-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.chip{border:1px solid var(--border);border-radius:999px;padding:5px 11px;cursor:pointer;font-size:12px;color:var(--text-muted);background:#fff;transition:all .15s;white-space:nowrap;user-select:none;font-family:inherit}
+.chip:hover{border-color:#bbb;background:#fafafa}
+.chip.cp.on{border-color:var(--purple-mid);background:var(--purple-light);color:var(--purple-dark);font-weight:500}
+.chip.ct.on{border-color:#5DCAA5;background:var(--teal-light);color:var(--teal-dark);font-weight:500}
+.chip.cc.on{border-color:#F0997B;background:var(--coral-light);color:var(--coral-dark);font-weight:500}
+.chip.cb.on{border-color:#85B7EB;background:var(--blue-light);color:var(--blue-dark);font-weight:500}
+.chip.cam.on{border-color:var(--amber);background:var(--amber-light);color:var(--amber-dark);font-weight:500}
+
+.btn{padding:10px 18px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:inherit;line-height:1}
+.btn-primary{background:var(--purple);color:#fff;border-color:var(--purple);width:100%}
+.btn-primary:hover{background:var(--purple-dark)}
+.btn-teal{background:var(--teal);color:#fff;border-color:var(--teal);width:100%}
+.btn-teal:hover{background:var(--teal-dark)}
+.btn-ghost{background:transparent;color:var(--text-muted);border-color:var(--border)}
+.btn-ghost:hover{background:#f5f5f0}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:6px}
+.btn-outline-p{border-color:var(--purple-mid);color:var(--purple-dark);background:var(--purple-light)}
+.btn-outline-p:hover{background:#dddcfc}
+.btn-outline-t{border-color:#5DCAA5;color:var(--teal-dark);background:var(--teal-light)}
+.btn-outline-t:hover{background:#c8f0e0}
+.btn:disabled{background:#ddd;border-color:#ddd;color:#999;cursor:not-allowed}
+
+.step-nav{display:flex;background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
+.step-btn{flex:1;padding:10px 4px;border:none;background:transparent;font-size:12px;color:var(--text-muted);cursor:pointer;border-right:1px solid var(--border);transition:all .15s;text-align:center;font-family:inherit;line-height:1.3}
+.step-btn:last-child{border-right:none}
+.step-btn.on{background:var(--purple);color:#fff;font-weight:500}
+.step-btn:hover:not(.on){background:#fafafa}
+.step-num{display:block;font-size:15px;margin-bottom:2px}
+.sp{display:none}
+.sp.on{display:block}
+
+.kw-area{border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px;min-height:38px;display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;background:#fff;cursor:text}
+.kw-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:500}
+.kw-main{background:var(--purple-light);color:var(--purple-dark)}
+.kw-long{background:var(--teal-light);color:var(--teal-dark)}
+.kw-x{cursor:pointer;opacity:.5;font-size:10px}
+.kw-x:hover{opacity:1}
+.ktype-row{display:flex;gap:6px;margin-bottom:6px}
+.ktype{padding:3px 10px;border-radius:999px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-muted);font-family:inherit}
+.ktype.sm{background:var(--purple-light);color:var(--purple-dark);border-color:var(--purple-mid);font-weight:500}
+.ktype.sl{background:var(--teal-light);color:var(--teal-dark);border-color:#5DCAA5;font-weight:500}
+.kw-row{display:flex;gap:6px;margin-bottom:4px}
+.kw-row input{flex:1}
+
+.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:999px;font-weight:500;white-space:nowrap}
+.bdg-p{background:var(--purple-light);color:var(--purple-dark)}
+.bdg-t{background:var(--teal-light);color:var(--teal-dark)}
+.bdg-c{background:var(--coral-light);color:var(--coral-dark)}
+.bdg-am{background:var(--amber-light);color:var(--amber-dark)}
+.bdg-b{background:var(--blue-light);color:var(--blue-dark)}
+.bdg-r{background:#FCEBEB;color:#A32D2D}
+
+.score-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.score-lbl{font-size:11px;color:var(--text-muted);min-width:68px}
+.sbar{flex:1;height:5px;border-radius:3px;background:#eee}
+.sfill{height:5px;border-radius:3px}
+.score-v{font-size:11px;font-weight:600;min-width:26px;text-align:right}
+
+.tip{padding:9px 11px;border-radius:var(--radius-sm);margin-top:8px}
+.tip-t{background:var(--teal-light)}
+.tip-b{background:var(--blue-light)}
+.tip-am{background:var(--amber-light)}
+.tip-p{background:var(--purple-light)}
+.tip-head{font-size:11px;font-weight:700;margin-bottom:3px}
+.tip-body{font-size:12px;line-height:1.65}
+
+.result-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.result-head{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;border-bottom:1px solid var(--border);background:#fafafa}
+.result-body{padding:13px}
+.post-text{font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;word-break:break-word}
+
+/* TOPIC CARDS */
+.topic-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;transition:border-color .15s}
+.topic-card:hover{border-color:#bbb}
+.topic-card.selected{border:2px solid var(--teal);background:#fafffe}
+.topic-head{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-bottom:1px solid var(--border);background:#fafafa}
+.topic-body{padding:11px 13px}
+.rank-badge{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+.r1{background:var(--amber-light);color:var(--amber-dark)}
+.r2{background:#F1EFE8;color:#444441}
+.r3{background:var(--coral-light);color:var(--coral-dark)}
+.rn{background:#fff;color:var(--text-muted);border:1px solid var(--border)}
+.lifecycle-bar{height:6px;border-radius:3px;background:#eee;margin:5px 0;overflow:hidden}
+.lc-fill{height:6px;border-radius:3px}
+.tag-chip{display:inline-block;font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--border);color:var(--text-muted);background:#fafafa;margin:2px 2px 2px 0}
+
+/* TITLE SELECTOR */
+.title-option{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;margin-bottom:7px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px}
+.title-option:hover{border-color:#bbb;background:#fafafa}
+.title-option.picked{border:2px solid var(--purple);background:var(--purple-light)}
+.title-radio{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.title-option.picked .title-radio{border-color:var(--purple);background:var(--purple)}
+.title-option.picked .title-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:#fff}
+.title-text{font-size:13px;font-weight:500;color:var(--text);line-height:1.5}
+.title-meta{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* METRIC */
+.metric-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.metric-card{background:#fafafa;border-radius:var(--radius-sm);padding:10px;text-align:center}
+.metric-val{font-size:19px;font-weight:700;color:var(--text)}
+.metric-lbl{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* FILTER */
+.filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.fchip{padding:4px 10px;border-radius:999px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--text-muted);font-family:inherit;transition:all .15s}
+.fchip.on{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:500}
+
+/* HIST */
+.hist-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:5px;cursor:pointer;transition:all .15s}
+.hist-item:hover{background:#fafafa;border-color:#bbb}
+
+/* SAVED */
+.saved-item{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;margin-bottom:8px}
+
+/* SETTINGS */
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.toggle{width:38px;height:22px;border-radius:11px;background:#ccc;cursor:pointer;transition:background .2s;position:relative;flex-shrink:0;border:none}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+.toggle.on{background:var(--teal)}
+.toggle.on::after{left:19px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:var(--radius);padding:22px;max-width:420px;width:90%}
+.modal h2{font-size:15px;font-weight:700;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--text-muted);line-height:1.65;margin-bottom:14px}
+
+/* LOADING */
+.loading{text-align:center;padding:2rem}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;animation:pulse 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.3;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.dots-row{display:flex;justify-content:center;gap:5px;margin-bottom:10px}
+
+/* SECTION TOGGLE */
+.sec-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:8px 0;background:none;border:none;border-bottom:1px solid var(--border);margin-bottom:10px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;color:var(--text)}
+.arr{font-size:11px;color:var(--text-hint);transition:transform .2s}
+.arr.open{transform:rotate(180deg)}
+
+/* WORKFLOW HIGHLIGHT BOX */
+.wf-box{background:linear-gradient(135deg,#EEEDFE 0%,#E1F5EE 100%);border:1.5px solid var(--purple-mid);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.wf-box-title{font-size:13px;font-weight:700;color:var(--purple-dark);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.wf-box-desc{font-size:12px;color:#444;line-height:1.65}
+
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.metric-grid{grid-template-columns:1fr 1fr}.wf-node span:last-child{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">🚀 自媒體行銷工具箱</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('workflow')">⚡ 工作流程</button>
+    <button class="nav-tab" onclick="goPage('saved')">📁 已儲存</button>
+    <button class="nav-tab" onclick="goPage('settings')">⚙️ 設定</button>
+  </div>
+  <div class="topbar-right">
+    <span class="api-badge api-err" id="apiStatus">未設定 API Key</span>
+  </div>
+</div>
+
+<!-- WORKFLOW PROGRESS BAR -->
+<div class="workflow-bar">
+  <div class="wf-step">
+    <button class="wf-node active" id="wn0" onclick="jumpStep(0)"><span>🔥</span><span>Step 1 掃描趨勢</span></button>
+  </div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step">
+    <button class="wf-node locked" id="wn1" onclick="jumpStep(1)"><span>✅</span><span>Step 2 選主題</span></button>
+  </div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step">
+    <button class="wf-node locked" id="wn2" onclick="jumpStep(2)"><span>✍️</span><span>Step 3 生成標題</span></button>
+  </div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step">
+    <button class="wf-node locked" id="wn3" onclick="jumpStep(3)"><span>📝</span><span>Step 4 寫貼文</span></button>
+  </div>
+  <div class="wf-arrow">→</div>
+  <div class="wf-step">
+    <button class="wf-node locked" id="wn4" onclick="jumpStep(4)"><span>📊</span><span>Step 5 分析優化</span></button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- ===== 工作流程頁 ===== -->
+<div class="page active" id="page-workflow">
+
+  <!-- STEP 1: 掃描趨勢 -->
+  <div id="step0">
+    <div class="wf-box">
+      <div class="wf-box-title">🔥 Step 1：掃描十大熱門主題</div>
+      <div class="wf-box-desc">先找趨勢，才知道要寫什麼。設定你的平台和類別，AI 幫你掃描當下最熱門的主題。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">趨勢情報設定</div>
+      <div class="g2">
+        <div><div class="lbl">分析平台</div><select id="tPlatform"><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>LinkedIn</option><option>Facebook</option><option>Twitter/X</option><option>全平台綜合</option></select></div>
+        <div><div class="lbl">目標地區</div><select id="tRegion"><option>台灣</option><option>全球</option><option>東南亞</option><option>日本</option><option>美國</option><option>香港/澳門</option></select></div>
+      </div>
+      <div class="mb10"><div class="lbl">內容類別（可多選）</div>
+        <div class="chip-wrap" id="tCatChips">
+          <span class="chip cc on" data-v="全部">全部</span>
+          <span class="chip cc" data-v="美食">美食</span><span class="chip cc" data-v="美妝">美妝</span>
+          <span class="chip cc" data-v="科技/AI">科技/AI</span><span class="chip cc" data-v="旅遊">旅遊</span>
+          <span class="chip cc" data-v="健身">健身</span><span class="chip cc" data-v="理財">理財</span>
+          <span class="chip cc" data-v="娛樂">娛樂</span><span class="chip cc" data-v="時尚">時尚</span>
+          <span class="chip cc" data-v="教育">教育</span><span class="chip cc" data-v="寵物">寵物</span>
+          <span class="chip cc" data-v="職場">職場</span><span class="chip cc" data-v="永續/環保">永續</span>
+          <span class="chip cc" data-v="親子">親子</span>
+        </div>
+      </div>
+      <div class="g2">
+        <div><div class="lbl">目標受眾年齡</div><select id="tAge"><option value="不限">不限</option><option value="18-24歲 Z世代">18-24 Z世代</option><option value="25-34歲 千禧世代">25-34 千禧世代</option><option value="35-44歲">35-44歲</option><option value="45歲以上">45歲以上</option></select></div>
+        <div><div class="lbl">趨勢時效性</div><select id="tTiming"><option value="當下爆紅（病毒式）">當下爆紅</option><option value="持續上升中">持續上升中</option><option value="長青常青型">長青常青型</option><option value="季節性話題">季節性話題</option></select></div>
+      </div>
+      <div class="mb10"><div class="lbl">品牌/帳號定位（選填）</div><input type="text" id="tBrand" placeholder="例：健身教練、美食部落客、科技新創品牌..."><div class="hint">填寫後 AI 會計算每個主題與你的受眾匹配度</div></div>
+      <div class="mb12"><div class="lbl">分析深度</div>
+        <div class="chip-wrap" id="tDepthChips">
+          <span class="chip cb on" data-v="quick">快速掃描</span>
+          <span class="chip cb" data-v="deep">深度分析（含競爭難度／受眾匹配／內容角度／生命週期）</span>
+        </div>
+      </div>
+      <button class="btn btn-teal" id="tScanBtn" onclick="scanTrends()">🔥 掃描十大熱門主題</button>
+    </div>
+    <div id="tLoadBlock" style="display:none">
+      <div class="card loading">
+        <div class="dots-row"><span class="dot" style="background:var(--teal)"></span><span class="dot" style="background:var(--teal)"></span><span class="dot" style="background:var(--teal)"></span></div>
+        <div style="font-size:13px;color:var(--text-muted)" id="tLoadMsg">AI 掃描趨勢中...</div>
+      </div>
+    </div>
+    <div id="tResultBlock"></div>
+  </div>
+
+  <!-- STEP 2: 選主題 -->
+  <div id="step1" style="display:none">
+    <div class="wf-box">
+      <div class="wf-box-title">✅ Step 2：選擇你要做的主題</div>
+      <div class="wf-box-desc">從十大熱門主題中，點選你想做的主題（可以選多個），選完後點「用選取的主題生成標題」。</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div class="filter-row" id="step2FilterRow" style="margin-bottom:0"></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="showStep(0)">← 重新掃描</button>
+        <button class="btn btn-sm btn-outline-t" id="toTitleBtn" onclick="goToTitles()" disabled>✍️ 生成標題 →</button>
+      </div>
+    </div>
+    <div id="topicSelectList"></div>
+    <div id="selectedSummary" style="display:none">
+      <div class="card" style="background:var(--teal-light);border-color:#5DCAA5">
+        <div style="font-size:13px;font-weight:600;color:var(--teal-dark);margin-bottom:6px">已選取的主題：</div>
+        <div id="selectedTagsDisplay"></div>
+        <button class="btn btn-teal" style="margin-top:10px" onclick="goToTitles()">✍️ 用選取的主題生成標題 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: 生成標題 -->
+  <div id="step2" style="display:none">
+    <div class="wf-box">
+      <div class="wf-box-title">✍️ Step 3：生成 SEO 標題</div>
+      <div class="wf-box-desc">根據你選的主題，AI 幫你生成多個 SEO 優化標題，每個標題都有不同的 Hook 策略，選出你最喜歡的一個。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">標題生成設定</div>
+      <div class="mb10"><div class="lbl">選取的主題</div><div id="titleTopicDisplay" style="display:flex;flex-wrap:wrap;gap:5px;padding:6px 0"></div></div>
+      <div class="g2">
+        <div><div class="lbl">目標平台</div><select id="titlePlatform"><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>LinkedIn</option><option>Facebook</option><option>Twitter/X</option></select></div>
+        <div><div class="lbl">標題數量</div><select id="titleCount"><option value="5">5 個標題</option><option value="8" selected>8 個標題</option><option value="10">10 個標題</option></select></div>
+      </div>
+      <div class="mb10"><div class="lbl">主要關鍵字（選填，會嵌入標題）</div><input type="text" id="titleKws" placeholder="例：減脂、理財、AI工具（用逗號分隔）"></div>
+      <div class="mb12"><div class="lbl">標題風格</div>
+        <div class="chip-wrap" id="titleStyleChips">
+          <span class="chip cp on" data-v="混合（自動分配各種風格）">混合風格</span>
+          <span class="chip cp" data-v="數字式（5個方法、3步驟）">數字式</span>
+          <span class="chip cp" data-v="問句式（你知道嗎？）">問句式</span>
+          <span class="chip cp" data-v="秘密揭露式（沒人告訴你的...）">秘密揭露式</span>
+          <span class="chip cp" data-v="對比衝突式（以前vs現在）">對比衝突式</span>
+          <span class="chip cp" data-v="痛點直擊式">痛點直擊式</span>
+        </div>
+      </div>
+      <div class="g2">
+        <button class="btn btn-ghost" onclick="showStep(1)">← 重新選主題</button>
+        <button class="btn btn-primary" id="titleGenBtn" onclick="generateTitles()">✍️ 生成 SEO 標題</button>
+      </div>
+    </div>
+    <div id="titleLoadBlock" style="display:none">
+      <div class="card loading">
+        <div class="dots-row"><span class="dot" style="background:var(--purple)"></span><span class="dot" style="background:var(--purple)"></span><span class="dot" style="background:var(--purple)"></span></div>
+        <div style="font-size:13px;color:var(--text-muted)" id="titleLoadMsg">AI 生成 SEO 標題中...</div>
+      </div>
+    </div>
+    <div id="titleResultBlock"></div>
+  </div>
+
+  <!-- STEP 4: 寫貼文 -->
+  <div id="step3" style="display:none">
+    <div class="wf-box">
+      <div class="wf-box-title">📝 Step 4：生成完整 SEO 貼文</div>
+      <div class="wf-box-desc">標題已確定，現在設定受眾、語氣、關鍵字，AI 幫你生成包含 Hook、主體內容、CTA 和 Hashtag 的完整貼文。</div>
+    </div>
+    <div class="step-nav">
+      <button class="step-btn on" onclick="goPostStep(0)"><span class="step-num">①</span>基本</button>
+      <button class="step-btn" onclick="goPostStep(1)"><span class="step-num">②</span>受眾</button>
+      <button class="step-btn" onclick="goPostStep(2)"><span class="step-num">③</span>關鍵字</button>
+      <button class="step-btn" onclick="goPostStep(3)"><span class="step-num">④</span>結果</button>
+    </div>
+    <!-- Post substep 0 -->
+    <div class="sp on" id="pp0">
+      <div class="card">
+        <div class="card-title">貼文基本設定</div>
+        <div class="mb10"><div class="lbl">已選標題</div><div id="postTitleDisplay" style="background:var(--purple-light);border-radius:var(--radius-sm);padding:9px 11px;font-size:13px;font-weight:600;color:var(--purple-dark)"></div></div>
+        <div class="mb10"><div class="lbl">主題補充說明（選填）</div><textarea id="pTopic" placeholder="對這個主題有什麼特別想說的重點？留空則 AI 自行發揮..."></textarea></div>
+        <div class="g2">
+          <div><div class="lbl">行業類別</div><select id="pIndustry"><option>電商/零售</option><option>美食/餐飲</option><option>美妝/保養</option><option>健身/運動</option><option>科技/數位</option><option>旅遊/生活</option><option>教育/知識</option><option>金融/理財</option><option>時尚/穿搭</option><option>其他</option></select></div>
+          <div><div class="lbl">貼文目標</div><select id="pGoal"><option>增加互動（按讚留言）</option><option>導流至官網/連結</option><option>提升品牌知名度</option><option>促進購買轉換</option><option>吸引新追蹤者</option><option>建立專業權威形象</option></select></div>
+        </div>
+        <div class="mb10"><div class="lbl">語氣風格</div>
+          <div class="chip-wrap" id="pToneChips">
+            <span class="chip ct on" data-v="親切活潑">親切活潑</span><span class="chip ct" data-v="專業權威">專業權威</span>
+            <span class="chip ct" data-v="幽默有趣">幽默有趣</span><span class="chip ct" data-v="情感共鳴">情感共鳴</span>
+            <span class="chip ct" data-v="文青質感">文青質感</span><span class="chip ct" data-v="直接銷售">直接銷售</span>
+            <span class="chip ct" data-v="教學分享">教學分享</span><span class="chip ct" data-v="故事敘述">故事敘述</span>
+          </div>
+        </div>
+        <div class="mb12"><div class="lbl">內容格式</div>
+          <div class="chip-wrap" id="pFmtChips">
+            <span class="chip cam on" data-v="一般貼文">一般貼文</span><span class="chip cam" data-v="教學步驟文">教學步驟</span>
+            <span class="chip cam" data-v="故事型長文">故事長文</span><span class="chip cam" data-v="問答互動文">問答互動</span>
+            <span class="chip cam" data-v="產品開箱文">產品開箱</span><span class="chip cam" data-v="迷你懶人包">懶人包</span>
+          </div>
+        </div>
+        <div class="g2">
+          <button class="btn btn-ghost" onclick="showStep(2)">← 重選標題</button>
+          <button class="btn btn-ghost" onclick="goPostStep(1)">下一步：受眾 →</button>
+        </div>
+      </div>
+    </div>
+    <!-- Post substep 1 -->
+    <div class="sp" id="pp1">
+      <div class="card">
+        <div class="card-title">目標受眾設定</div>
+        <div class="g2">
+          <div><div class="lbl">年齡層</div><select id="pAge"><option>18-24歲 Z世代</option><option>25-34歲 千禧世代</option><option>35-44歲</option><option>45歲以上</option><option>不限</option></select></div>
+          <div><div class="lbl">性別傾向</div><select id="pGender"><option>不限</option><option>偏女性</option><option>偏男性</option></select></div>
+        </div>
+        <div class="mb10"><div class="lbl">受眾痛點 / 渴望</div><textarea id="pPain" placeholder="例：忙碌上班族想保持體態但沒時間運動..." style="min-height:52px"></textarea></div>
+        <div class="mb10"><div class="lbl">受眾興趣標籤</div><input type="text" id="pInterest" placeholder="例：永續生活、AI工具、韓系穿搭..."></div>
+        <div class="mb10"><div class="lbl">Hook 鉤子策略</div>
+          <div class="chip-wrap" id="pHookChips">
+            <span class="chip cc on" data-v="痛點式（你是否有過...）">痛點式</span>
+            <span class="chip cc" data-v="數字式（X個方法）">數字式</span>
+            <span class="chip cc" data-v="故事式（我曾經...）">故事式</span>
+            <span class="chip cc" data-v="反問式（你知道...嗎？）">反問式</span>
+            <span class="chip cc" data-v="秘密揭露式（沒人告訴你的...）">秘密揭露式</span>
+            <span class="chip cc" data-v="對比衝突式（以前vs現在）">對比衝突式</span>
+          </div>
+        </div>
+        <div class="mb12"><div class="lbl">CTA 行動呼籲</div><select id="pCTA"><option>留言告訴我你的想法</option><option>點擊連結了解更多</option><option>儲存這篇備用</option><option>分享給需要的朋友</option><option>追蹤帳號不錯過</option><option>私訊我獲取資訊</option><option>限時優惠立即下單</option></select></div>
+        <div class="g2">
+          <button class="btn btn-ghost" onclick="goPostStep(0)">← 上一步</button>
+          <button class="btn btn-ghost" onclick="goPostStep(2)">下一步：關鍵字 →</button>
+        </div>
+      </div>
+    </div>
+    <!-- Post substep 2 -->
+    <div class="sp" id="pp2">
+      <div class="card">
+        <div class="card-title">SEO 關鍵字 & 生成</div>
+        <div class="ktype-row">
+          <button class="ktype sm" id="pKtM" onclick="setKT('main')">主要關鍵字</button>
+          <button class="ktype" id="pKtL" onclick="setKT('long')">長尾關鍵字</button>
+        </div>
+        <div class="kw-area" id="pKwArea"></div>
+        <div class="kw-row mb10">
+          <input type="text" id="pKwInput" placeholder="輸入後按新增或 Enter...">
+          <button class="btn btn-ghost btn-sm" onclick="addKw()" style="white-space:nowrap">+ 新增</button>
+        </div>
+        <div class="hint mb12">紫色＝主要關鍵字（AI至少嵌入2次）・綠色＝長尾關鍵字（各出現1次）</div>
+        <div class="mb12"><div class="lbl">A/B 測試版本</div>
+          <div class="chip-wrap" id="pVerChips">
+            <span class="chip cp on" data-v="1">1個版本</span>
+            <span class="chip cp" data-v="2">2個版本（A/B）</span>
+            <span class="chip cp" data-v="3">3個版本</span>
+          </div>
+        </div>
+        <div class="g2">
+          <button class="btn btn-ghost" onclick="goPostStep(1)">← 上一步</button>
+          <button class="btn btn-primary" id="pGenBtn" onclick="generatePost()">✦ 生成完整貼文</button>
+        </div>
+      </div>
+    </div>
+    <!-- Post substep 3: results -->
+    <div class="sp" id="pp3">
+      <div id="pLoadBlock" style="display:none">
+        <div class="card loading">
+          <div class="dots-row"><span class="dot" style="background:var(--purple)"></span><span class="dot" style="background:var(--purple)"></span><span class="dot" style="background:var(--purple)"></span></div>
+          <div style="font-size:13px;color:var(--text-muted)" id="pLoadMsg">AI 撰寫貼文中...</div>
+        </div>
+      </div>
+      <div id="pResultBlock"></div>
+      <div id="pBackBtns" style="display:none">
+        <div class="g2" style="margin-top:8px">
+          <button class="btn btn-ghost" onclick="goPostStep(2)">← 重新設定</button>
+          <button class="btn btn-outline-t" onclick="showStep(0)">🔥 掃描新主題</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5: 分析優化 -->
+  <div id="step4" style="display:none">
+    <div class="wf-box">
+      <div class="wf-box-title">📊 Step 5：貼文分析 & 優化建議</div>
+      <div class="wf-box-desc">發文後追蹤表現，或貼上任何貼文讓 AI 給你具體優化建議。</div>
+    </div>
+    <div class="card">
+      <div class="card-title">貼文優化分析</div>
+      <div class="mb10"><div class="lbl">貼上你的貼文內容</div><textarea id="analyzePost" placeholder="貼上你已有的貼文，或從「已儲存」取出..." style="min-height:100px"></textarea></div>
+      <div class="mb12"><div class="lbl">你想優化的方向</div>
+        <div class="chip-wrap" id="analyzeGoalChips">
+          <span class="chip cp on" data-v="全面分析">全面分析</span>
+          <span class="chip cp" data-v="提升互動率">提升互動率</span>
+          <span class="chip cp" data-v="加強SEO">加強SEO</span>
+          <span class="chip cp" data-v="提高轉換率">提高轉換率</span>
+          <span class="chip cp" data-v="改善可讀性">改善可讀性</span>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="analyzeBtn" onclick="analyzePost()">📊 分析並給出優化建議</button>
+    </div>
+    <div id="analyzeLoadBlock" style="display:none">
+      <div class="card loading">
+        <div class="dots-row"><span class="dot" style="background:var(--purple)"></span><span class="dot" style="background:var(--purple)"></span><span class="dot" style="background:var(--purple)"></span></div>
+        <div style="font-size:13px;color:var(--text-muted)">AI 深度分析中...</div>
+      </div>
+    </div>
+    <div id="analyzeResultBlock"></div>
+  </div>
+
+</div><!-- end page-workflow -->
+
+<!-- ===== 已儲存 ===== -->
+<div class="page" id="page-saved">
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><div style="font-size:15px;font-weight:700" id="savedCount">已儲存 0 篇</div><div class="hint">儲存在瀏覽器本地，不會上傳</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="exportSavedCSV()">匯出 CSV</button>
+        <button class="btn btn-ghost btn-sm" style="color:#A32D2D" onclick="clearAllSaved()">清除全部</button>
+      </div>
+    </div>
+  </div>
+  <div class="filter-row" id="savedFilterRow"><span class="fchip on" data-f="全部" onclick="filterSaved(this)">全部</span></div>
+  <div id="savedList"></div>
+</div>
+
+<!-- ===== 設定 ===== -->
+<div class="page" id="page-settings">
+  <div class="card">
+    <div class="card-title">🔑 API Key 設定</div>
+    <div class="mb12" style="background:var(--blue-light);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--blue-dark);line-height:1.8">
+      <strong>如何取得免費 API Key：</strong><br>
+      1. 前往 <a href="https://console.anthropic.com" target="_blank" style="color:var(--purple)">console.anthropic.com</a> 註冊<br>
+      2. 點「API Keys」→「Create Key」<br>
+      3. 複製 Key（以 sk-ant- 開頭）貼到下方
+    </div>
+    <div class="mb10"><div class="lbl">Anthropic API Key</div><input type="password" id="apiKeyInput" placeholder="sk-ant-api..."><div class="hint">Key 只存在你的瀏覽器，不會上傳</div></div>
+    <button class="btn btn-primary" onclick="saveApiKey()">儲存 API Key</button>
+  </div>
+  <div class="card">
+    <div class="card-title">🧠 品牌知識庫</div>
+    <div class="hint mb12">填寫後每次生成自動帶入，AI 越用越了解你的品牌</div>
+    <div class="mb10"><div class="lbl">品牌/帳號名稱</div><input type="text" id="setBrand" placeholder="例：OOO品牌"></div>
+    <div class="mb10"><div class="lbl">帳號定位（一句話）</div><input type="text" id="setPositioning" placeholder="例：幫台灣上班族用簡單方式達成財務自由的理財帳號"></div>
+    <div class="mb10"><div class="lbl">目標受眾描述</div><textarea id="setAudience" placeholder="例：25-35歲台灣上班族，有存錢意願但不知道怎麼投資..." style="min-height:56px"></textarea></div>
+    <div class="mb10"><div class="lbl">品牌語氣關鍵字</div><input type="text" id="setVoice" placeholder="例：親切、實用、不說教、接地氣"></div>
+    <div class="mb10"><div class="lbl">常用主要關鍵字</div><input type="text" id="setKws" placeholder="例：理財、存錢、投資（逗號分隔）"></div>
+    <button class="btn btn-primary" onclick="saveBrandKit()">儲存品牌知識庫</button>
+  </div>
+  <div class="card">
+    <div class="card-title">⚙️ 偏好設定</div>
+    <div class="settings-row"><div><div style="font-size:13px;font-weight:500">自動套用品牌知識庫</div><div class="hint">生成時自動帶入品牌設定</div></div><button class="toggle on" id="togBrand" onclick="togglePref('autoBrand',this)"></button></div>
+    <div class="settings-row"><div><div style="font-size:13px;font-weight:500">生成後自動儲存</div><div class="hint">貼文自動加入已儲存清單</div></div><button class="toggle on" id="togSave" onclick="togglePref('autoSave',this)"></button></div>
+    <div class="settings-row"><div><div style="font-size:13px;font-weight:500">趨勢深度分析預設開啟</div><div class="hint">預設使用深度分析模式</div></div><button class="toggle" id="togDeep" onclick="togglePref('deepMode',this)"></button></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 使用統計</div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-val" id="statScans">0</div><div class="metric-lbl">趨勢掃描</div></div>
+      <div class="metric-card"><div class="metric-val" id="statPosts">0</div><div class="metric-lbl">已生成貼文</div></div>
+      <div class="metric-card"><div class="metric-val" id="statSaved">0</div><div class="metric-lbl">已儲存貼文</div></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" style="color:#A32D2D" onclick="resetStats()">重置統計</button>
+  </div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end app -->
+
+<!-- API Modal -->
+<div class="modal-overlay" id="apiModal">
+  <div class="modal">
+    <h2>🔑 需要設定 API Key</h2>
+    <p>要使用 AI 功能，請先前往「⚙️ 設定」頁面設定 Anthropic API Key。新帳號有免費額度。</p>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">稍後</button>
+      <button class="btn btn-primary" style="flex:1" onclick="goPage('settings');closeModal()">前往設定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const S={
+  tCats:new Set(['全部']),tDepth:'quick',tHistory:[],
+  currentTopics:[],selectedTopics:[],
+  selectedTitles:[],chosenTitle:'',chosenTopic:'',
+  pTone:'親切活潑',pFmt:'一般貼文',pHook:'痛點式（你是否有過...）',pVer:'1',
+  titleStyle:'混合（自動分配各種風格）',analyzeGoal:'全面分析',
+  pKwType:'main',pKws:{main:[],long:[]},
+  savedPosts:[],
+  prefs:{autoBrand:true,autoSave:true,deepMode:false},
+  stats:{scans:0,posts:0,saved:0},
+  brandKit:{}
+};
+
+// ============================================================
+// INIT
+// ============================================================
+function init(){
+  loadStorage();
+  initAllChips();
+  renderSaved();
+  checkApiKey();
+  sbLoad();
+}
+
+function loadStorage(){
+  try{
+    ['mktSaved','mktPrefs','mktStats','mktBrandKit','mktTHistory'].forEach(k=>{
+      const v=localStorage.getItem(k);
+      if(!v)return;
+      const d=JSON.parse(v);
+      if(k==='mktSaved')S.savedPosts=d;
+      else if(k==='mktPrefs')S.prefs={...S.prefs,...d};
+      else if(k==='mktStats')S.stats={...S.stats,...d};
+      else if(k==='mktBrandKit'){
+        S.brandKit=d;
+        ['brand','positioning','audience','voice','kws'].forEach(f=>{
+          const el=document.getElementById('set'+f.charAt(0).toUpperCase()+f.slice(1));
+          if(el&&d[f])el.value=d[f];
+        });
+        if(d.kws){
+          S.pKws.main=[...new Set(d.kws.split(/[,，]/).map(k=>k.trim()).filter(Boolean))];
+          renderKws();
+        }
+      }
+      else if(k==='mktTHistory')S.tHistory=d;
+    });
+    const ak=localStorage.getItem('mktApiKey');
+    if(ak)document.getElementById('apiKeyInput').value=ak;
+    applyPrefs();
+  }catch(e){}
+}
+
+function applyPrefs(){
+  document.getElementById('togBrand').className='toggle'+(S.prefs.autoBrand?' on':'');
+  document.getElementById('togSave').className='toggle'+(S.prefs.autoSave?' on':'');
+  document.getElementById('togDeep').className='toggle'+(S.prefs.deepMode?' on':'');
+  if(S.prefs.deepMode){
+    document.querySelectorAll('#tDepthChips .chip').forEach(c=>c.classList.remove('on'));
+    const dc=document.querySelector('#tDepthChips .chip[data-v="deep"]');
+    if(dc){dc.classList.add('on');S.tDepth='deep';}
+  }
+}
+
+function saveStore(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+// ============================================================
+// SUPABASE 雲端同步
+// ============================================================
+const SUPABASE_URL='https://qgrgpzqmpospcomjfosk.supabase.co';
+const SUPABASE_KEY='sb_publishable_3O0vB9AbkAQ99yFw-H7t1w_vMNB9fc5';
+
+async function sbInsert(item){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/saved_posts`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Accept':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({platform:item.platform||'',topic:item.topic||'',post:item.post||'',seo_title:item.title||'',scores:item.scores||{}})
+    });
+  }catch(e){console.log('Supabase sync error:',e);}
+}
+
+async function sbLoad(){
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/saved_posts?select=*&order=created_at.desc&limit=200`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Accept':'application/json'}
+    });
+    const data=await res.json();
+    if(Array.isArray(data)&&data.length>0){
+      S.savedPosts=data.map(r=>({platform:r.platform,topic:r.topic,title:r.seo_title,post:r.post,scores:r.scores,time:r.created_at,sbId:r.id}));
+      saveStore('mktSaved',S.savedPosts);
+      renderSaved();
+    }
+  }catch(e){console.log('Supabase load error:',e);}
+}
+
+async function sbDelete(sbId){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/saved_posts?id=eq.${sbId}`,{
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Accept':'application/json'}
+    });
+  }catch(e){console.log('Supabase delete error:',e);}
+}
+
+function checkApiKey(){
+  const k=localStorage.getItem('mktApiKey');
+  const el=document.getElementById('apiStatus');
+  if(k&&k.startsWith('sk-')){el.textContent='✓ API 已連線';el.className='api-badge api-ok';}
+  else{el.textContent='未設定 API Key';el.className='api-badge api-err';}
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>{
+    t.classList.toggle('active',['workflow','saved','settings'][i]===id);
+  });
+  if(id==='saved')renderSaved();
+}
+
+function showStep(idx){
+  for(let i=0;i<5;i++){
+    const el=document.getElementById('step'+i);
+    if(el)el.style.display=i===idx?'block':'none';
+  }
+  updateWorkflowBar(idx);
+}
+
+function updateWorkflowBar(activeIdx){
+  for(let i=0;i<5;i++){
+    const n=document.getElementById('wn'+i);
+    if(!n)continue;
+    n.className='wf-node';
+    if(i<activeIdx)n.classList.add('done');
+    else if(i===activeIdx)n.classList.add('active');
+    else n.classList.add('locked');
+  }
+}
+
+function jumpStep(idx){
+  // Only allow jumping to completed or current steps
+  const node=document.getElementById('wn'+idx);
+  if(node&&node.classList.contains('locked'))return;
+  showStep(idx);
+}
+
+// post substeps
+function goPostStep(idx){
+  document.querySelectorAll('.step-btn').forEach((b,i)=>b.classList.toggle('on',i===idx));
+  document.querySelectorAll('#step3 .sp').forEach((p,i)=>p.classList.toggle('on',i===idx));
+}
+
+// ============================================================
+// CHIP INIT
+// ============================================================
+function initAllChips(){
+  // single-select chip groups
+  const singleGroups={
+    tDepthChips:'tDepth', pToneChips:'pTone', pFmtChips:'pFmt',
+    pHookChips:'pHook', pVerChips:'pVer', titleStyleChips:'titleStyle',
+    analyzeGoalChips:'analyzeGoal'
+  };
+  Object.entries(singleGroups).forEach(([gid,key])=>{
+    const wrap=document.getElementById(gid);
+    if(!wrap)return;
+    wrap.querySelectorAll('.chip').forEach(chip=>{
+      chip.addEventListener('click',function(){
+        wrap.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+        this.classList.add('on');
+        S[key]=this.dataset.v;
+      });
+    });
+  });
+  // multi-select: tCatChips
+  document.querySelectorAll('#tCatChips .chip').forEach(chip=>{
+    chip.addEventListener('click',function(){
+      const v=this.dataset.v;
+      if(v==='全部'){
+        S.tCats.clear();S.tCats.add('全部');
+        document.querySelectorAll('#tCatChips .chip').forEach(c=>c.classList.remove('on'));
+        this.classList.add('on');return;
+      }
+      document.querySelector('#tCatChips .chip').classList.remove('on');
+      S.tCats.delete('全部');
+      if(S.tCats.has(v)){S.tCats.delete(v);this.classList.remove('on');}
+      else{S.tCats.add(v);this.classList.add('on');}
+      if(S.tCats.size===0){S.tCats.add('全部');document.querySelector('#tCatChips .chip').classList.add('on');}
+    });
+  });
+}
+
+// ============================================================
+// KEYWORDS
+// ============================================================
+function setKT(t){
+  S.pKwType=t;
+  document.getElementById('pKtM').className='ktype'+(t==='main'?' sm':'');
+  document.getElementById('pKtL').className='ktype'+(t==='long'?' sl':'');
+}
+function renderKws(){
+  const area=document.getElementById('pKwArea');
+  if(!area)return;
+  area.innerHTML='';
+  S.pKws.main.forEach((k,i)=>{const s=document.createElement('span');s.className='kw-tag kw-main';s.innerHTML=k+' <span class="kw-x" onclick="rmKw(\'main\','+i+')">✕</span>';area.appendChild(s);});
+  S.pKws.long.forEach((k,i)=>{const s=document.createElement('span');s.className='kw-tag kw-long';s.innerHTML=k+' <span class="kw-x" onclick="rmKw(\'long\','+i+')">✕</span>';area.appendChild(s);});
+}
+function addKw(){const inp=document.getElementById('pKwInput');const v=inp.value.trim();if(!v)return;S.pKws[S.pKwType].push(v);inp.value='';renderKws();}
+function rmKw(t,i){S.pKws[t].splice(i,1);renderKws();}
+document.getElementById('pKwInput').addEventListener('keydown',e=>{if(e.key==='Enter')addKw();});
+
+// ============================================================
+// API CALL
+// ============================================================
+function getApiKey(){return localStorage.getItem('mktApiKey')||'';}
+function closeModal(){document.getElementById('apiModal').classList.remove('show');}
+function saveApiKey(){const k=document.getElementById('apiKeyInput').value.trim();if(!k){alert('請輸入 API Key');return;}localStorage.setItem('mktApiKey',k);checkApiKey();alert('✅ API Key 已儲存！');}
+
+
+// ============================================================
+// HASHTAG 上限（各平台）
+// ============================================================
+const HASHTAG_LIMITS={Instagram:10,TikTok:6,YouTube:5,LinkedIn:5,Facebook:5,'Twitter/X':2,'全平台綜合':10};
+function getHashtagLimit(){const p=document.getElementById('titlePlatform');return HASHTAG_LIMITS[p?p.value:'Instagram']||10;}
+
+async function callClaude(prompt,maxTokens=2000){
+  const key=getApiKey();
+  if(!key||!key.startsWith('sk-')){document.getElementById('apiModal').classList.add('show');throw new Error('No API key');}
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]})
+  });
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message);
+  return data.content.map(i=>i.text||'').join('');
+}
+
+// ============================================================
+// STEP 1: SCAN TRENDS
+// ============================================================
+const tLoadMsgs=['AI 掃描趨勢訊號中...','分析演算法推送邏輯...','評估競爭難度與機會...','計算受眾匹配指數...','整理十大熱門主題...'];
+
+async function scanTrends(){
+  const platform=document.getElementById('tPlatform').value;
+  const region=document.getElementById('tRegion').value;
+  const age=document.getElementById('tAge').value;
+  const timing=document.getElementById('tTiming').value;
+  const brand=document.getElementById('tBrand').value.trim()||S.brandKit.positioning||'';
+  const cats=S.tCats.has('全部')?'所有類別':Array.from(S.tCats).join('、');
+  const isDeep=S.tDepth==='deep';
+
+  const btn=document.getElementById('tScanBtn');
+  btn.disabled=true;btn.textContent='掃描中...';
+  document.getElementById('tLoadBlock').style.display='block';
+  document.getElementById('tResultBlock').innerHTML='';
+
+  let mi=0;const lt=setInterval(()=>{document.getElementById('tLoadMsg').textContent=tLoadMsgs[mi++%tLoadMsgs.length];},1100);
+
+  const deepExt=isDeep?`,"competition_level":"低/中/高","audience_match":0-100,"content_angles":["角度1","角度2","角度3"],"lifecycle_stage":"起飛期/爆發期/成熟期/衰退期","lifecycle_pct":0-100,"monetization":"變現潛力30字內"`:'';
+
+  const now=new Date();const dateStr=now.getFullYear()+'年'+(now.getMonth()+1)+'月';
+const prompt=`你是台灣頂尖社群媒體趨勢分析師。現在是${dateStr}。
+
+條件：平台${platform}｜地區${region}｜類別${cats}｜受眾${age}｜時效${timing}｜品牌定位${brand||'未指定'}
+
+請分析現在（${dateStr}）台灣社群媒體上流量最大、當下最熱門的10個內容主題（請給當下最新的趨勢，不要給過時話題），只輸出JSON：
+{"summary":{"avg_heat":平均熱度,"top_category":"最熱類別","market_insight":"市場洞察30字"},"topics":[{"rank":1,"title":"主題10字內","category":"類別","desc":"為何熱門及切入點45字內","heat":0-100,"growth":"+XX%","best_format":"最佳格式","hashtags_top":["tag1","tag2","tag3"],"hashtags_niche":["tag1","tag2"],"best_time":"最佳時間","hook_idea":"Hook開場白建議","urgency":"高/中/低"${deepExt}}],"strategy_brief":{"quick_win":"立即做","long_game":"長期耕耘","avoid":"應避免"}}
+繁體中文，hashtag不加#。`;
+
+  try{
+    let txt=await callClaude(prompt,4000);
+    txt=txt.replace(/```json|```/g,'').trim();
+    // 修復被截斷的JSON
+    try{JSON.parse(txt);}catch(e){
+      txt=txt.replace(/,\s*([\]\}])\s*$/,'$1');
+      const opens=(txt.match(/\[/g)||[]).length-(txt.match(/\]/g)||[]).length;
+      const openb=(txt.match(/\{/g)||[]).length-(txt.match(/\}/g)||[]).length;
+      for(let i=0;i<opens;i++)txt+=']';
+      for(let i=0;i<openb;i++)txt+='}';
+    }
+    const parsed=JSON.parse(txt);
+    clearInterval(lt);
+    document.getElementById('tLoadBlock').style.display='none';
+    S.currentTopics=parsed.topics||[];
+    S.selectedTopics=[];
+    renderTrendResult(parsed,platform,region);
+    S.stats.scans++;saveStore('mktStats',S.stats);
+    // save history
+    const rec={id:Date.now(),platform,region,cats,count:S.currentTopics.length,
+      time:new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'}),data:parsed};
+    S.tHistory.unshift(rec);if(S.tHistory.length>8)S.tHistory.pop();
+    saveStore('mktTHistory',S.tHistory);
+  }catch(e){
+    clearInterval(lt);
+    document.getElementById('tLoadBlock').style.display='none';
+    if(e.message!=='No API key')
+      document.getElementById('tResultBlock').innerHTML=`<div class="card" style="color:#A32D2D;font-size:13px">掃描失敗：${e.message}</div>`;
+  }
+  btn.disabled=false;btn.textContent='🔥 掃描十大熱門主題';
+}
+
+function renderTrendResult(d,platform,region){
+  const rb=document.getElementById('tResultBlock');
+  const sm=d.summary||{};
+  let html=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <div><span style="font-size:15px;font-weight:700">${platform} · ${region}</span> <span style="font-size:11px;color:var(--text-muted)">熱門主題掃描結果</span></div>
+      <button class="btn btn-sm btn-outline-t" onclick="proceedToSelect()">✅ 選擇主題 →</button>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-val">${Math.round(sm.avg_heat||0)}</div><div class="metric-lbl">平均熱度</div></div>
+      <div class="metric-card"><div class="metric-val" style="font-size:14px">${sm.top_category||'—'}</div><div class="metric-lbl">最熱類別</div></div>
+      <div class="metric-card"><div class="metric-val">10</div><div class="metric-lbl">熱門主題</div></div>
+    </div>
+    ${sm.market_insight?`<div class="tip tip-t"><div class="tip-head" style="color:#085041">市場洞察</div><div class="tip-body" style="color:#0F6E56">${sm.market_insight}</div></div>`:''}
+  </div>`;
+
+  (d.topics||[]).forEach((t,i)=>{
+    const rankCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    const heatColor=t.heat>=80?'#D85A30':t.heat>=60?'#EF9F27':'#1D9E75';
+    const lifeColor=t.lifecycle_stage==='起飛期'?'#1D9E75':t.lifecycle_stage==='爆發期'?'#D85A30':t.lifecycle_stage==='成熟期'?'#EF9F27':'#888780';
+    const urgBadge=t.urgency?`<span class="badge ${t.urgency==='高'?'bdg-r':t.urgency==='中'?'bdg-am':'bdg-t'}">${t.urgency}急迫</span>`:'';
+    const lifeBadge=t.lifecycle_stage?`<span class="badge bdg-p">${t.lifecycle_stage}</span>`:'';
+    const compBadge=t.competition_level?`<span class="badge ${t.competition_level==='低'?'bdg-t':t.competition_level==='中'?'bdg-am':'bdg-r'}">${t.competition_level}競爭</span>`:'';
+    const amScore=t.audience_match!==undefined?`<div class="score-row"><span class="score-lbl">受眾匹配</span><div class="sbar"><div class="sfill" style="width:${Math.round(t.audience_match)}%;background:#534AB7"></div></div><span class="score-v" style="color:#534AB7">${Math.round(t.audience_match)}</span></div>`:'';
+    const angles=t.content_angles?`<div class="tip tip-b" style="margin-top:7px"><div class="tip-head" style="color:#0C447C">內容角度</div>${t.content_angles.map((a,ai)=>`<div class="tip-body" style="color:#185FA5">${ai+1}. ${a}</div>`).join('')}</div>`:'';
+    const mono=t.monetization?`<div class="tip tip-am" style="margin-top:5px"><div class="tip-head" style="color:#633806">變現潛力</div><div class="tip-body" style="color:#854F0B">${t.monetization}</div></div>`:'';
+    const topTags=(t.hashtags_top||[]).map(h=>`<span class="tag-chip">#${h}</span>`).join('');
+    const nicheTags=(t.hashtags_niche||[]).map(h=>`<span class="tag-chip" style="border-color:#5DCAA5;color:#085041;background:#E1F5EE">#${h}</span>`).join('');
+    html+=`<div class="topic-card" id="tcard-${i}">
+      <div class="topic-head">
+        <div class="rank-badge ${rankCls}">${t.rank}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:3px">
+            <span style="font-size:14px;font-weight:700">${t.title}</span>
+            <span class="badge bdg-c">${t.category}</span>${urgBadge}${lifeBadge}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted)">${t.growth||''} ${t.best_format?'· '+t.best_format:''} ${t.best_time?'· '+t.best_time:''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:17px;font-weight:800;color:${heatColor}">${Math.round(t.heat||0)}</div>
+          <div style="font-size:10px;color:var(--text-hint)">熱度</div>
+        </div>
+      </div>
+      <div class="topic-body">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;line-height:1.6">${t.desc}</div>
+        <div class="score-row"><span class="score-lbl">熱度</span><div class="sbar"><div class="sfill" style="width:${Math.round(t.heat||0)}%;background:${heatColor}"></div></div><span class="score-v" style="color:${heatColor}">${Math.round(t.heat||0)}</span></div>
+        ${amScore}
+        ${t.competition_level?`<div style="display:flex;gap:5px;margin:6px 0;flex-wrap:wrap">${compBadge}${t.collab_type?`<span style="font-size:11px;color:var(--text-hint)">· ${t.collab_type}</span>`:''}</div>`:''}
+        ${t.lifecycle_pct!==undefined?`<div style="margin:7px 0 2px"><div class="lbl" style="margin-bottom:2px">趨勢週期：${t.lifecycle_stage||''}</div><div class="lifecycle-bar"><div class="lc-fill" style="width:${Math.round(t.lifecycle_pct||0)}%;background:${lifeColor}"></div></div></div>`:''}
+        ${t.hook_idea?`<div style="background:#fafafa;border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;margin:7px 0"><div class="lbl" style="margin-bottom:2px">Hook 建議</div><div style="font-size:12px;color:var(--text);line-height:1.5">${t.hook_idea}</div></div>`:''}
+        ${angles}${mono}
+        ${topTags?`<div style="margin-top:7px"><div class="lbl" style="margin-bottom:3px">大流量標籤</div>${topTags}</div>`:''}
+        ${nicheTags?`<div style="margin-top:5px"><div class="lbl" style="margin-bottom:3px">精準標籤</div>${nicheTags}</div>`:''}
+      </div>
+    </div>`;
+  });
+
+  if(d.strategy_brief){
+    const sb=d.strategy_brief;
+    html+=`<div class="result-card"><div class="result-head"><span style="font-size:13px;font-weight:700">策略師建議</span></div><div class="result-body">
+      <div class="tip tip-t" style="margin-bottom:5px"><div class="tip-head" style="color:#085041">立即做（快速見效）</div><div class="tip-body" style="color:#0F6E56">${sb.quick_win||''}</div></div>
+      <div class="tip tip-b" style="margin-bottom:5px"><div class="tip-head" style="color:#0C447C">長期耕耘</div><div class="tip-body" style="color:#185FA5">${sb.long_game||''}</div></div>
+      <div class="tip tip-am"><div class="tip-head" style="color:#633806">目前應避免</div><div class="tip-body" style="color:#854F0B">${sb.avoid||''}</div></div>
+    </div></div>`;
+  }
+
+  html+=`<div style="margin-top:10px"><button class="btn btn-teal" style="width:100%" onclick="proceedToSelect()">✅ 選擇主題，開始生成標題 →</button></div>`;
+  rb.innerHTML=html;
+}
+
+function proceedToSelect(){
+  showStep(1);
+  renderTopicSelect();
+}
+
+// ============================================================
+// STEP 2: SELECT TOPIC
+// ============================================================
+function renderTopicSelect(){
+  const list=document.getElementById('topicSelectList');
+  const allCats=['全部',...new Set(S.currentTopics.map(t=>t.category))];
+  document.getElementById('step2FilterRow').innerHTML=
+    allCats.map(c=>`<span class="fchip${c==='全部'?' on':''}" data-f="${c}" onclick="filterTopicSelect(this)">${c}</span>`).join('');
+
+  list.innerHTML=S.currentTopics.map((t,i)=>{
+    const heatColor=t.heat>=80?'#D85A30':t.heat>=60?'#EF9F27':'#1D9E75';
+    const rankCls=i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+    const isSelected=S.selectedTopics.includes(i);
+    return `<div class="topic-card${isSelected?' selected':''}" id="stcard-${i}" data-cat="${t.category}" onclick="toggleTopicSelect(${i})">
+      <div class="topic-head" style="cursor:pointer">
+        <div class="rank-badge ${rankCls}">${t.rank}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">${t.title}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${t.category} · 熱度 <span style="color:${heatColor};font-weight:600">${Math.round(t.heat)}</span> · ${t.growth||''}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.5">${t.desc}</div>
+        </div>
+        <div style="flex-shrink:0;width:24px;height:24px;border-radius:50%;border:2px solid ${isSelected?'var(--teal)':'var(--border)'};background:${isSelected?'var(--teal)':'#fff'};display:flex;align-items:center;justify-content:center;transition:all .15s" id="scheck-${i}">
+          ${isSelected?'<span style="color:#fff;font-size:13px;font-weight:700">✓</span>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  updateSelectionUI();
+}
+
+function toggleTopicSelect(i){
+  const idx=S.selectedTopics.indexOf(i);
+  if(idx===-1)S.selectedTopics.push(i);
+  else S.selectedTopics.splice(idx,1);
+  // update card visual
+  const card=document.getElementById('stcard-'+i);
+  const check=document.getElementById('scheck-'+i);
+  const sel=S.selectedTopics.includes(i);
+  if(card)card.className='topic-card'+(sel?' selected':'');
+  if(check){
+    check.style.border='2px solid '+(sel?'var(--teal)':'var(--border)');
+    check.style.background=sel?'var(--teal)':'#fff';
+    check.innerHTML=sel?'<span style="color:#fff;font-size:13px;font-weight:700">✓</span>':'';
+  }
+  updateSelectionUI();
+}
+
+function updateSelectionUI(){
+  const btn=document.getElementById('toTitleBtn');
+  const summary=document.getElementById('selectedSummary');
+  const tagsDiv=document.getElementById('selectedTagsDisplay');
+  const n=S.selectedTopics.length;
+  btn.disabled=n===0;
+  btn.textContent=n===0?'✍️ 生成標題 →':`✍️ 生成標題（${n}個主題）→`;
+  if(n>0){
+    summary.style.display='block';
+    tagsDiv.innerHTML=S.selectedTopics.map(i=>`<span class="badge bdg-t" style="margin:2px;font-size:12px">${S.currentTopics[i].title}</span>`).join(' ');
+  }else{
+    summary.style.display='none';
+  }
+}
+
+function filterTopicSelect(el){
+  const f=el.dataset.f;
+  document.querySelectorAll('#step2FilterRow .fchip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('[id^="stcard-"]').forEach(c=>{
+    c.style.display=(f==='全部'||c.dataset.cat===f)?'':'none';
+  });
+}
+
+function goToTitles(){
+  if(S.selectedTopics.length===0){alert('請先選擇至少一個主題！');return;}
+  // pre-fill platform from trend scan
+  const tPlat=document.getElementById('tPlatform').value;
+  document.getElementById('titlePlatform').value=tPlat;
+  // show selected topics in title step
+  const display=document.getElementById('titleTopicDisplay');
+  display.innerHTML=S.selectedTopics.map(i=>`<span class="badge bdg-t" style="font-size:12px;margin:2px">${S.currentTopics[i].title}</span>`).join('');
+  showStep(2);
+}
+
+// ============================================================
+// STEP 3: GENERATE TITLES
+// ============================================================
+const titleLoadMsgs=['分析主題關鍵元素...','套用 SEO 標題公式...','生成多元 Hook 策略...','優化標題吸引力...'];
+
+async function generateTitles(){
+  const platform=document.getElementById('titlePlatform').value;
+  const count=document.getElementById('titleCount').value;
+  const kws=document.getElementById('titleKws').value.trim();
+  const topics=S.selectedTopics.map(i=>S.currentTopics[i].title).join('、');
+  const topicsDesc=S.selectedTopics.map(i=>`${S.currentTopics[i].title}（${S.currentTopics[i].desc}）`).join('\n');
+  const brand=S.prefs.autoBrand&&S.brandKit.positioning?`品牌定位：${S.brandKit.positioning}，`:'' ;
+
+  const btn=document.getElementById('titleGenBtn');
+  btn.disabled=true;btn.textContent='生成中...';
+  document.getElementById('titleLoadBlock').style.display='block';
+  document.getElementById('titleResultBlock').innerHTML='';
+
+  let mi=0;const lt=setInterval(()=>{document.getElementById('titleLoadMsg').textContent=titleLoadMsgs[mi++%titleLoadMsgs.length];},900);
+
+  const prompt=`你是台灣頂尖SEO文案專家。${brand}
+
+以下是選取的熱門主題：
+${topicsDesc}
+
+請為這些主題生成${count}個${platform}平台的SEO優化標題，要求：
+- 風格：${S.titleStyle}
+- 平台特性：${platform}（標題長度和風格要符合）
+${kws?'- 關鍵字（至少1個嵌入標題）：'+kws:''}
+- 每個標題用不同的Hook策略
+- 標題要讓人看了就想點開
+- 繁體中文，台灣用語
+
+只輸出JSON：
+{"titles":[{
+  "id":1,
+  "title":"完整標題",
+  "hook_type":"Hook類型（數字式/問句式/秘密式/痛點式/對比式/故事式）",
+  "topic_ref":"對應主題名稱",
+  "appeal":"為什麼這個標題有吸引力（15字內）",
+  "seo_score":0-100,
+  "click_score":0-100,
+  "keywords_used":["用到的關鍵字"]
+}]}`;
+
+  try{
+    let txt=await callClaude(prompt,1500);
+    txt=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    clearInterval(lt);
+    document.getElementById('titleLoadBlock').style.display='none';
+    S.selectedTitles=parsed.titles||[];
+    S.chosenTitle='';
+    renderTitleResult(parsed.titles,platform);
+  }catch(e){
+    clearInterval(lt);
+    document.getElementById('titleLoadBlock').style.display='none';
+    if(e.message!=='No API key')
+      document.getElementById('titleResultBlock').innerHTML=`<div class="card" style="color:#A32D2D;font-size:13px">生成失敗：${e.message}</div>`;
+  }
+  btn.disabled=false;btn.textContent='✍️ 生成 SEO 標題';
+}
+
+function renderTitleResult(titles,platform){
+  const rb=document.getElementById('titleResultBlock');
+  let html=`<div class="card"><div class="card-title">選擇你最喜歡的標題 <span style="font-weight:400;color:var(--text-muted);font-size:12px">（點選一個，再點下一步）</span></div>`;
+  titles.forEach((t,i)=>{
+    const seoColor=t.seo_score>=80?'#1D9E75':t.seo_score>=60?'#EF9F27':'#D85A30';
+    const clkColor=t.click_score>=80?'#1D9E75':t.click_score>=60?'#EF9F27':'#D85A30';
+    html+=`<div class="title-option" id="topt-${i}" onclick="pickTitle(${i})">
+      <div class="title-radio" id="tradio-${i}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="title-text">${t.title}</div>
+        <div class="title-meta">
+          <span class="badge bdg-p">${t.hook_type}</span>
+          <span class="badge bdg-c" style="margin-left:3px">${t.topic_ref}</span>
+          <span style="margin-left:6px;font-size:11px;color:var(--text-hint)">${t.appeal}</span>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:6px">
+          <span style="font-size:11px;color:${seoColor}">SEO ${Math.round(t.seo_score)}</span>
+          <span style="font-size:11px;color:${clkColor}">點擊潛力 ${Math.round(t.click_score)}</span>
+          ${(t.keywords_used||[]).length?`<span style="font-size:11px;color:var(--text-hint)">關鍵字：${t.keywords_used.join('、')}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  });
+  html+=`<div id="titleNextArea" style="display:none;margin-top:10px">
+    <div class="tip tip-p" style="margin-bottom:10px"><div class="tip-head" style="color:var(--purple-dark)">已選標題：</div><div class="tip-body" style="color:var(--purple-dark);font-size:13px;font-weight:600" id="chosenTitleDisplay"></div></div>
+    <div class="g2">
+      <button class="btn btn-ghost" onclick="generateTitles()">重新生成標題</button>
+      <button class="btn btn-primary" onclick="goToPost()">📝 用這個標題寫貼文 →</button>
+    </div>
+  </div></div>`;
+  rb.innerHTML=html;
+}
+
+function pickTitle(i){
+  document.querySelectorAll('.title-option').forEach((el,j)=>{
+    el.classList.toggle('picked',j===i);
+    const radio=document.getElementById('tradio-'+j);
+    if(radio){radio.style.borderColor=j===i?'var(--purple)':'var(--border)';radio.style.background=j===i?'var(--purple)':'#fff';radio.innerHTML=j===i?'<span style="width:6px;height:6px;border-radius:50%;background:#fff;display:block"></span>':'';}
+  });
+  S.chosenTitle=S.selectedTitles[i].title;
+  S.chosenTopic=S.selectedTitles[i].topic_ref;
+  document.getElementById('chosenTitleDisplay').textContent=S.chosenTitle;
+  document.getElementById('titleNextArea').style.display='block';
+}
+
+function goToPost(){
+  if(!S.chosenTitle){alert('請先選擇一個標題！');return;}
+  document.getElementById('postTitleDisplay').value=S.chosenTitle;
+  document.getElementById('pTopic').value='';
+  // pre-fill brand kws
+  if(S.prefs.autoBrand&&S.brandKit.kws){
+    const kws=S.brandKit.kws.split(/[,，]/).map(k=>k.trim()).filter(Boolean);
+    S.pKws.main=[...new Set(kws)];
+    renderKws();
+  }
+  showStep(3);
+  goPostStep(0);
+}
+
+// ============================================================
+// STEP 4: GENERATE POST
+// ============================================================
+const pLoadMsgs=['AI 分析受眾輪廓...','套用平台 SEO 規則...','撰寫 Hook 與主體...','生成 Hashtag 策略...','評估行銷效果...'];
+const platformSEO={
+  Instagram:'前125字最關鍵，關鍵字放第1-2句，hashtag 10-15個混合大中小流量，CTA最後。',
+  TikTok:'前1-2行超重要，口語化，hashtag 5-8個，首句必須超吸睛。',
+  YouTube:'說明欄前100字含主要關鍵字2-3次，長尾關鍵字穿插中段，hashtag 3-5個。',
+  LinkedIn:'第一句含關鍵字，段落短2-3行，關鍵字全文3-5次，hashtag 3-5個，結尾提問。',
+  Facebook:'前3行最關鍵，情感共鳴型互動率高，hashtag 3-5個。',
+  'Twitter/X':'140字精煉，hashtag 1-2個，觀點或數據型內容最佳。'
+};
+
+async function generatePost(){
+  const _titleEl=document.getElementById('postTitleDisplay');
+  if(_titleEl&&_titleEl.value.trim())S.chosenTitle=_titleEl.value.trim();
+  if(!S.chosenTitle){alert('請先完成標題選擇！');return;}
+  const industry=document.getElementById('pIndustry').value;
+  const goal=document.getElementById('pGoal').value;
+  const age=document.getElementById('pAge').value;
+  const gender=document.getElementById('pGender').value;
+  const pain=document.getElementById('pPain').value.trim();
+  const interest=document.getElementById('pInterest').value.trim();
+  const cta=document.getElementById('pCTA').value;
+  const topicNote=document.getElementById('pTopic').value.trim();
+  const platform=document.getElementById('titlePlatform').value;
+  const verCount=parseInt(S.pVer);
+  const mainKws=S.pKws.main;
+  const longKws=S.pKws.long;
+
+  let brandCtx='';
+  if(S.prefs.autoBrand&&S.brandKit.positioning)
+    brandCtx=`\n品牌知識庫：${S.brandKit.positioning}${S.brandKit.voice?'，語氣：'+S.brandKit.voice:''}${S.brandKit.audience?'，受眾：'+S.brandKit.audience:''}`;
+
+  const btn=document.getElementById('pGenBtn');
+  btn.disabled=true;btn.textContent='生成中...';
+  goPostStep(3);
+  document.getElementById('pLoadBlock').style.display='block';
+  document.getElementById('pResultBlock').innerHTML='';
+  document.getElementById('pBackBtns').style.display='none';
+
+  let mi=0;const lt=setInterval(()=>{document.getElementById('pLoadMsg').textContent=pLoadMsgs[mi++%pLoadMsgs.length];},1200);
+
+  const kwNote=mainKws.length||longKws.length
+    ?`主要關鍵字（至少嵌入2次）：${mainKws.join('、')||'無'}\n長尾關鍵字（各1次）：${longKws.join('、')||'無'}`
+    :'未指定關鍵字，請根據主題和標題自動選擇適合的SEO關鍵字';
+
+  const prompt=`你是台灣頂尖自媒體行銷策略師與SEO文案專家。${brandCtx}
+
+【這篇貼文的標題已確定】：「${S.chosenTitle}」
+主題：${S.chosenTopic}${topicNote?'\n補充說明：'+topicNote:''}
+平台：${platform}｜行業：${industry}｜目標：${goal}｜格式：${S.pFmt}｜語氣：${S.pTone}
+受眾：${age}，${gender}${pain?'，痛點：'+pain:''}${interest?'，興趣：'+interest:''}
+Hook策略：${S.pHook}｜CTA：${cta}
+${kwNote}
+平台SEO規則：${platformSEO[platform]||''}
+需生成${verCount}個版本${verCount>1?'（每版不同Hook切角）':''}
+
+重要：貼文內容要完全呼應標題「${S.chosenTitle}」，讓標題和內容高度一致。
+
+只輸出JSON：
+{"versions":[{"label":"版本A","hook_type":"Hook類型","post":"完整貼文含換行emoji hashtag","seo_title":"${S.chosenTitle}","keyword_density":[{"kw":"關鍵字","count":次數,"type":"main或long"}],"scores":{"hook_power":0-100,"seo_score":0-100,"engagement_potential":0-100,"conversion_rate":0-100},"improvement_tips":["建議1","建議2","建議3"]}],"posting_strategy":{"best_time":"最佳時間","frequency":"發文頻率","follow_up":"互動策略"},"hashtag_strategy":{"top_tags":["tag1","tag2","tag3"],"niche_tags":["tag1","tag2"],"brand_tag":"品牌tag"}}`;
+
+  try{
+    let txt=await callClaude(prompt,2200);
+    txt=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    clearInterval(lt);
+    document.getElementById('pLoadBlock').style.display='none';
+    renderPostResult(parsed,platform);
+    S.stats.posts+=parsed.versions.length;saveStore('mktStats',S.stats);
+    if(S.prefs.autoSave){
+      parsed.versions.forEach(v=>{
+        savePost({platform,topic:S.chosenTopic,title:S.chosenTitle,post:v.post,scores:v.scores,time:new Date().toISOString()});
+      });
+    }
+    // enable step 5
+    const wn4=document.getElementById('wn4');
+    if(wn4)wn4.classList.remove('locked');
+  }catch(e){
+    clearInterval(lt);
+    document.getElementById('pLoadBlock').style.display='none';
+    if(e.message!=='No API key')
+      document.getElementById('pResultBlock').innerHTML=`<div class="card" style="color:#A32D2D;font-size:13px">生成失敗：${e.message}</div>`;
+  }
+  btn.disabled=false;btn.textContent='✦ 生成完整貼文';
+  document.getElementById('pBackBtns').style.display='block';
+}
+
+const bestTimes={Instagram:['晚上8-10點','中午12-1點','早上7-9點'],TikTok:['晚上9-11點','下午3-5點','早上7-9點'],YouTube:['晚上8-10點','週末下午2-4點','晚上6-8點'],LinkedIn:['早上8-10點','中午12點','週二至週四'],Facebook:['晚上7-9點','中午12-2點','早上9-10點'],'Twitter/X':['早上8-10點','午休12-1點','晚上9-10點']};
+
+function renderPostResult(d,platform){
+  var rb=document.getElementById('pResultBlock');
+  var html='';
+  var versions=d.versions||[];
+  for(var vi=0;vi<versions.length;vi++){
+    var v=versions[vi];
+    var sc=v.scores||{};
+    var rows=[
+      ['Hook吸引力',sc.hook_power||0,'#D4537E'],
+      ['SEO分數',sc.seo_score||0,'#534AB7'],
+      ['互動潛力',sc.engagement_potential||0,'#1D9E75'],
+      ['轉換潛力',sc.conversion_rate||0,'#EF9F27']
+    ];
+    var scHTML='';
+    for(var si=0;si<rows.length;si++){
+      var r=rows[si];
+      scHTML+='<div class="score-row"><span class="score-lbl">'+r[0]+'</span><div class="sbar"><div class="sfill" style="width:'+Math.round(r[1])+'%;background:'+r[2]+'"></div></div><span class="score-v" style="color:'+r[2]+'">'+Math.round(r[1])+'</span></div>';
+    }
+    var dHTML='';
+    var kd=v.keyword_density||[];
+    for(var ki=0;ki<kd.length;ki++){
+      var k=kd[ki];
+      var kc=k.type==='main'?'#7F77DD':'#1D9E75';
+      var kb=k.type==='main'?'bdg-p':'bdg-t';
+      var kt=k.type==='main'?'主':'長尾';
+      dHTML+='<div class="score-row"><span class="score-lbl" style="font-size:11px">'+k.kw+' <span class="badge '+kb+'">'+kt+'</span></span><div class="sbar"><div class="sfill" style="width:'+Math.min(100,k.count*25)+'%;background:'+kc+'"></div></div><span class="score-v" style="color:'+kc+'">x'+k.count+'</span></div>';
+    }
+    var tipsHTML='';
+    var tips=v.improvement_tips||[];
+    for(var ti=0;ti<tips.length;ti++){
+      tipsHTML+='<div class="tip-body" style="color:#185FA5">'+tips[ti]+'</div>';
+    }
+    var postSafe=(v.post||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var titleSafe=(v.seo_title||S.chosenTitle||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    var labelSafe=(v.label||'').replace(/&/g,'&amp;');
+    var hookSafe=(v.hook_type||'').replace(/&/g,'&amp;');
+    html+='<div class="result-card">';
+    html+='<div class="result-head">';
+    html+='<div style="display:flex;align-items:center;gap:7px">';
+    html+='<span style="font-size:13px;font-weight:700">'+labelSafe+'</span>';
+    html+='<span class="badge bdg-am">'+hookSafe+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:5px">';
+    html+='<button class="btn btn-ghost btn-sm" onclick="copyEditedPost('+vi+',this)">複製</button>';
+    html+='<button class="btn btn-sm btn-outline-t" onclick="saveEditedPost('+vi+')">&#128193; 儲存</button>';
+    html+='<button class="btn btn-sm" style="border-color:var(--purple-mid);color:var(--purple-dark);background:var(--purple-light)" onclick="sendEditedToAnalyze('+vi+')">&#128202; 分析</button>';
+    html+='</div></div>';
+    html+='<div class="result-body">';
+    html+='<div style="background:#fafafa;border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px">';
+    html+='<div class="lbl">標題</div>';
+    html+='<div style="font-size:13px;font-weight:700;color:var(--purple-dark)">'+titleSafe+'</div>';
+    html+='</div>';
+    html+='<textarea id="postEdit'+vi+'" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;line-height:1.85;color:var(--text);min-height:180px;resize:vertical;font-family:inherit;background:#fff">'+postSafe+'</textarea>';
+    html+='<div style="font-size:11px;color:var(--text-hint);text-align:right;margin-top:4px">'+(v.post||'').length+' 字</div>';
+    html+='<div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--border)">';
+    html+='<div class="lbl" style="margin-bottom:6px">貼文評分</div>'+scHTML+'</div>';
+    if(dHTML)html+='<div style="margin-top:9px;padding-top:9px;border-top:1px solid var(--border)"><div class="lbl" style="margin-bottom:5px">關鍵字密度</div>'+dHTML+'</div>';
+    if(tipsHTML)html+='<div class="tip tip-b" style="margin-top:8px"><div class="tip-head" style="color:#0C447C">行銷優化建議</div>'+tipsHTML+'</div>';
+    html+='</div></div>';
+  }
+
+
+  // 發文策略
+  if(d.posting_strategy){
+    var ps=d.posting_strategy;
+    var bt=bestTimes[platform]||['晚上8-10點','中午12-1點','早上7-9點'];
+    var btHTML='';
+    var labels=['黃金時段','次佳','第三'];
+    for(var bi=0;bi<bt.length;bi++){
+      btHTML+='<div class="metric-card"><div class="metric-val" style="font-size:13px">'+bt[bi]+'</div><div class="metric-lbl">'+labels[bi]+'</div></div>';
+    }
+    html+='<div class="result-card"><div class="result-head"><span style="font-size:13px;font-weight:700">發文策略</span></div><div class="result-body">';
+    html+='<div class="g3" style="margin-bottom:10px">'+btHTML+'</div>';
+    html+='<div class="tip tip-t" style="margin-bottom:5px"><div class="tip-head" style="color:#085041">發文頻率</div><div class="tip-body" style="color:#0F6E56">'+(ps.frequency||'')+'</div></div>';
+    html+='<div class="tip tip-am"><div class="tip-head" style="color:#633806">互動回覆策略</div><div class="tip-body" style="color:#854F0B">'+(ps.follow_up||'')+'</div></div>';
+    html+='</div></div>';
+  }
+
+  // Hashtag 策略
+  if(d.hashtag_strategy){
+    var hs=d.hashtag_strategy;
+    var topTags=hs.top_tags||[];
+    var nicheTags=hs.niche_tags||[];
+    var topHTML='';
+    for(var ti=0;ti<topTags.length;ti++){
+      topHTML+='<span class="badge bdg-p" style="margin:2px">#'+topTags[ti].replace(/^#/,'')+'</span> ';
+    }
+    var nicheHTML='';
+    for(var ni=0;ni<nicheTags.length;ni++){
+      nicheHTML+='<span class="badge bdg-t" style="margin:2px">#'+nicheTags[ni].replace(/^#/,'')+'</span> ';
+    }
+    var allTagsArr=topTags.concat(nicheTags);
+    if(hs.brand_tag)allTagsArr.push(hs.brand_tag);
+    var allTagsStr=allTagsArr.map(function(t){return '#'+t.replace(/^#/,'');}).join(' ');
+    _lastHashtags=allTagsStr;
+    html+='<div class="result-card"><div class="result-head"><span style="font-size:13px;font-weight:700">Hashtag 策略</span>';
+    html+='<button class="btn btn-ghost btn-sm" onclick="copyAllHashtags(this)">複製全部</button>';
+    html+='</div><div class="result-body">';
+    if(topHTML)html+='<div style="margin-bottom:8px"><div class="lbl" style="margin-bottom:4px">大流量標籤</div>'+topHTML+'</div>';
+    if(nicheHTML)html+='<div style="margin-bottom:8px"><div class="lbl" style="margin-bottom:4px">精準標籤</div>'+nicheHTML+'</div>';
+    if(hs.brand_tag)html+='<div><div class="lbl" style="margin-bottom:4px">品牌標籤</div><span class="badge bdg-am">#'+hs.brand_tag.replace(/^#/,'')+'</span></div>';
+    html+='</div></div>';
+  }
+
+  // 進入分析按鈕
+  html+='<div style="margin-top:8px"><button class="btn btn-outline-p" style="width:100%" onclick="goToAnalyze()">&#128202; 進入貼文優化分析 →</button></div>';
+
+  rb.innerHTML=html;
+}
+
+function sendToAnalyze(encodedPost){
+  document.getElementById('analyzePost').value=decodeURIComponent(encodedPost);
+  goToAnalyze();
+}
+function goToAnalyze(){showStep(4);}
+
+// ============================================================
+// STEP 5: ANALYZE POST
+// ============================================================
+async function analyzePost(){
+  const postContent=document.getElementById('analyzePost').value.trim();
+  if(!postContent){alert('請先貼上貼文內容！');return;}
+  const goal=S.analyzeGoal;
+  const platform=document.getElementById('titlePlatform').value||'Instagram';
+
+  const btn=document.getElementById('analyzeBtn');
+  btn.disabled=true;btn.textContent='分析中...';
+  document.getElementById('analyzeLoadBlock').style.display='block';
+  document.getElementById('analyzeResultBlock').innerHTML='';
+
+  const prompt=`你是台灣頂尖社群媒體行銷顧問。
+
+請針對以下${platform}貼文進行深度分析，重點：${goal}
+
+貼文內容：
+${postContent}
+
+只輸出JSON：
+{"overall_score":0-100,"scores":{"hook":0-100,"seo":0-100,"engagement":0-100,"readability":0-100,"cta":0-100},"strengths":["優點1","優點2","優點3"],"weaknesses":["缺點1","缺點2"],"improvements":[{"area":"改善項目","current":"現在的問題","suggestion":"具體建議","priority":"高/中/低"}],"revised_hook":"建議的改寫開場白（只改第一句）","hashtag_audit":{"good":["好的tag"],"remove":["建議移除的tag"],"add":["建議新增的tag"]},"best_posting_time":"最佳發文時間建議"}`;
+
+  try{
+    let txt=await callClaude(prompt,1500);
+    txt=txt.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(txt);
+    document.getElementById('analyzeLoadBlock').style.display='none';
+    renderAnalyzeResult(parsed);
+  }catch(e){
+    document.getElementById('analyzeLoadBlock').style.display='none';
+    if(e.message!=='No API key')
+      document.getElementById('analyzeResultBlock').innerHTML=`<div class="card" style="color:#A32D2D;font-size:13px">分析失敗：${e.message}</div>`;
+  }
+  btn.disabled=false;btn.textContent='📊 分析並給出優化建議';
+}
+
+function renderAnalyzeResult(d){
+  const rb=document.getElementById('analyzeResultBlock');
+  const sc=d.scores||{};
+  const scoreItems=[{l:'Hook吸引力',v:sc.hook||0,c:'#D4537E'},{l:'SEO',v:sc.seo||0,c:'#534AB7'},{l:'互動潛力',v:sc.engagement||0,c:'#1D9E75'},{l:'可讀性',v:sc.readability||0,c:'#EF9F27'},{l:'CTA效果',v:sc.cta||0,c:'#378ADD'}];
+  const overall=Math.round(d.overall_score||0);
+  const overallColor=overall>=80?'#1D9E75':overall>=60?'#EF9F27':'#D85A30';
+  let html=`<div class="result-card"><div class="result-head"><span style="font-size:13px;font-weight:700">貼文深度分析報告</span><span style="font-size:18px;font-weight:800;color:${overallColor}">${overall}分</span></div>
+    <div class="result-body">
+      ${scoreItems.map(s=>`<div class="score-row"><span class="score-lbl">${s.l}</span><div class="sbar"><div class="sfill" style="width:${Math.round(s.v)}%;background:${s.c}"></div></div><span class="score-v" style="color:${s.c}">${Math.round(s.v)}</span></div>`).join('')}
+      ${(d.strengths||[]).length?`<div class="tip tip-t" style="margin-top:10px"><div class="tip-head" style="color:#085041">優點</div>${d.strengths.map(s=>`<div class="tip-body" style="color:#0F6E56">✓ ${s}</div>`).join('')}</div>`:''}
+      ${(d.improvements||[]).length?`<div style="margin-top:10px"><div class="lbl" style="margin-bottom:8px">具體改善建議</div>${d.improvements.map(imp=>`<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:6px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="font-size:12px;font-weight:700">${imp.area}</span><span class="badge ${imp.priority==='高'?'bdg-r':imp.priority==='中'?'bdg-am':'bdg-t'}">${imp.priority}優先</span></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:3px">現況：${imp.current}</div><div style="font-size:12px;color:var(--teal-dark)">→ ${imp.suggestion}</div></div>`).join('')}</div>`:''}
+      ${d.revised_hook?`<div class="tip tip-p" style="margin-top:8px"><div class="tip-head" style="color:var(--purple-dark)">建議改寫開場白</div><div class="tip-body" style="color:var(--purple-dark);font-size:13px">"${d.revised_hook}"</div></div>`:''}
+      ${d.hashtag_audit?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div class="lbl" style="margin-bottom:6px">Hashtag 審核</div>
+        ${(d.hashtag_audit.remove||[]).length?`<div style="margin-bottom:5px"><span style="font-size:11px;color:#A32D2D;font-weight:600">建議移除：</span>${d.hashtag_audit.remove.map(t=>`<span class="badge bdg-r" style="margin:2px">#${t.replace(/^#/,'')}</span>`).join('')}</div>`:''}
+        ${(d.hashtag_audit.add||[]).length?`<div><span style="font-size:11px;color:var(--teal-dark);font-weight:600">建議新增：</span>${d.hashtag_audit.add.map(t=>`<span class="badge bdg-t" style="margin:2px">#${t.replace(/^#/,'')}</span>`).join('')}</div>`:''}
+      </div>`:''}
+      ${d.best_posting_time?`<div class="tip tip-am" style="margin-top:8px"><div class="tip-head" style="color:#633806">最佳發文時間</div><div class="tip-body" style="color:#854F0B">${d.best_posting_time}</div></div>`:''}
+    </div></div>
+  <div style="margin-top:8px">
+    <div class="card" style="border:1.5px solid var(--purple-mid)">
+      <div class="lbl" style="margin-bottom:6px">✏️ 根據建議修改後的貼文</div>
+      <textarea id="step5EditArea" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;line-height:1.85;min-height:160px;resize:vertical;font-family:inherit;color:var(--text)" placeholder="把修改好的貼文貼在這裡，或直接在這裡編輯..."></textarea>
+      <div style="font-size:11px;color:var(--text-hint);text-align:right;margin-top:3px" id="step5Count">0 字</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="copyStep5(this)">複製修改後貼文</button>
+        <button class="btn btn-sm btn-outline-t" onclick="saveStep5()">📁 儲存修改後貼文</button>
+        <button class="btn btn-teal btn-sm" style="margin-left:auto" onclick="showStep(0)">🔥 掃描新主題</button>
+      </div>
+    </div>
+  </div>`;
+  rb.innerHTML=html;
+}
+
+
+var _lastHashtags='';
+function copyAllHashtags(btn){if(!_lastHashtags)return;navigator.clipboard.writeText(_lastHashtags).then(function(){if(btn){var o=btn.textContent;btn.textContent='已複製！';setTimeout(function(){btn.textContent=o;},1500);}});}
+function getEditedPost(i){var el=document.getElementById('postEdit'+i);return el?el.value:'';}
+function copyEditedPost(i,btn){const txt=getEditedPost(i);if(!txt)return;navigator.clipboard.writeText(txt).then(()=>{if(btn){const o=btn.textContent;btn.textContent='已複製！';setTimeout(()=>btn.textContent=o,1500);}});}
+function saveEditedPost(i){
+  const txt=getEditedPost(i);if(!txt)return;
+  const titleEl=document.getElementById('postTitleDisplay');
+  const title=titleEl?titleEl.value.trim():S.chosenTitle;
+  savePost({platform:document.getElementById('titlePlatform').value,topic:S.chosenTopic,title,post:txt,scores:{},time:new Date().toISOString()});
+  alert('✅ 已儲存！');
+}
+function sendEditedToAnalyze(i){const txt=getEditedPost(i);if(txt){document.getElementById('analyzePost').value=txt;showStep(4);}}
+
+// ============================================================
+// SAVED POSTS
+// ============================================================
+function savePost(item){
+  S.savedPosts.unshift(item);
+  if(S.savedPosts.length>200)S.savedPosts.pop();
+  saveStore('mktSaved',S.savedPosts);
+  S.stats.saved=S.savedPosts.length;saveStore('mktStats',S.stats);
+  sbInsert(item);
+}
+
+function savePostManual(postEnc,titleEnc,topicEnc,platform,scoresEnc){
+  savePost({platform,topic:decodeURIComponent(topicEnc),title:decodeURIComponent(titleEnc),post:decodeURIComponent(postEnc),scores:JSON.parse(decodeURIComponent(scoresEnc)),time:new Date().toISOString()});
+  alert('✅ 已儲存！');
+}
+
+let savedFilter='全部';
+function filterSaved(el){
+  savedFilter=el.dataset.f;
+  document.querySelectorAll('#savedFilterRow .fchip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');renderSaved();
+}
+
+function renderSaved(){
+  const list=document.getElementById('savedList');
+  const countEl=document.getElementById('savedCount');
+  const platforms=['全部',...new Set(S.savedPosts.map(p=>p.platform).filter(Boolean))];
+  document.getElementById('savedFilterRow').innerHTML=platforms.map(p=>`<span class="fchip${p===savedFilter?' on':''}" data-f="${p}" onclick="filterSaved(this)">${p}</span>`).join('');
+  const filtered=savedFilter==='全部'?S.savedPosts:S.savedPosts.filter(p=>p.platform===savedFilter);
+  countEl.textContent=`已儲存 ${S.savedPosts.length} 篇`;
+  if(filtered.length===0){list.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--text-muted)"><div style="font-size:36px;margin-bottom:12px">📭</div><div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px">還沒有儲存任何貼文</div><div style="font-size:13px">從工作流程生成貼文後點「儲存」，或開啟自動儲存</div></div>`;return;}
+  list.innerHTML=filtered.map((item,i)=>{
+    const sc=item.scores||{};
+    const avg=sc.hook_power||sc.seo_score?Math.round(((sc.hook_power||0)+(sc.seo_score||0)+(sc.engagement_potential||0)+(sc.conversion_rate||0))/4):0;
+    const date=item.time?new Date(item.time).toLocaleDateString('zh-TW'):'';
+    return `<div class="saved-item">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <span class="badge bdg-p">${item.platform||'—'}</span>
+          ${item.title?`<span style="font-size:12px;font-weight:700;color:var(--text)">${item.title}</span>`:''}
+          ${avg?`<span class="badge bdg-t">綜合 ${avg}分</span>`:''}
+        </div>
+        <span style="font-size:11px;color:var(--text-hint)">${date}</span>
+      </div>
+      ${item.topic?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">主題：${item.topic}</div>`:''}
+      <div style="font-size:12px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:72px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,#000 50%,transparent)">${(item.post||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      <div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="expandSaved(${i})">展開</button>
+        <button class="btn btn-ghost btn-sm" onclick="copySaved(${i})">複製</button>
+        <button class="btn btn-ghost btn-sm" style="color:${item.status==='已發文'?'#1D9E75':item.status==='已排程'?'#534AB7':'#6b6965'}" onclick="cycleStatus(${i})">${item.status||'草稿'}</button>
+        <button class="btn btn-ghost btn-sm" style="color:#A32D2D" onclick="deleteSaved(${i})">刪除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function expandSaved(i){
+  const filtered=savedFilter==='全部'?S.savedPosts:S.savedPosts.filter(p=>p.platform===savedFilter);
+  const item=filtered[i];if(item)alert((item.title?'【'+item.title+'】\n\n':'')+item.post);
+}
+function copySaved(i){
+  const filtered=savedFilter==='全部'?S.savedPosts:S.savedPosts.filter(p=>p.platform===savedFilter);
+  const item=filtered[i];if(item)navigator.clipboard.writeText(item.post);
+}
+
+function cycleStatus(i){
+  const filtered=savedFilter==='全部'?S.savedPosts:S.savedPosts.filter(p=>p.platform===savedFilter);
+  const item=filtered[i];if(!item)return;
+  const states=['草稿','已排程','已發文'];
+  const cur=states.indexOf(item.status||'草稿');
+  item.status=states[(cur+1)%states.length];
+  saveStore('mktSaved',S.savedPosts);
+  renderSaved();
+}
+
+function deleteSaved(i){
+  if(!confirm('確定刪除？'))return;
+  const filtered=savedFilter==='全部'?S.savedPosts:S.savedPosts.filter(p=>p.platform===savedFilter);
+  const item=filtered[i];const idx=S.savedPosts.indexOf(item);
+  if(idx>-1)S.savedPosts.splice(idx,1);
+  if(item.sbId)sbDelete(item.sbId);
+  saveStore('mktSaved',S.savedPosts);S.stats.saved=S.savedPosts.length;saveStore('mktStats',S.stats);renderSaved();
+}
+function clearAllSaved(){
+  if(!confirm('確定清除全部已儲存的貼文？此操作不可復原。'))return;
+  S.savedPosts=[];saveStore('mktSaved',S.savedPosts);S.stats.saved=0;saveStore('mktStats',S.stats);renderSaved();
+}
+function exportSavedCSV(){
+  if(!S.savedPosts.length){alert('沒有可匯出的貼文');return;}
+  let csv='\uFEFF日期,平台,主題,標題,Hook評分,SEO評分,互動潛力,轉換潛力,貼文內容\n';
+  S.savedPosts.forEach(item=>{
+    const sc=item.scores||{};
+    const date=item.time?new Date(item.time).toLocaleDateString('zh-TW'):'';
+    csv+=`"${date}","${item.platform||''}","${item.topic||''}","${item.title||''}",${Math.round(sc.hook_power||0)},${Math.round(sc.seo_score||0)},${Math.round(sc.engagement_potential||0)},${Math.round(sc.conversion_rate||0)},"${(item.post||'').replace(/"/g,'""')}"\n`;
+  });
+  downloadFile(csv,'已儲存貼文.csv','text/csv;charset=utf-8;');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveBrandKit(){
+  S.brandKit={brand:document.getElementById('setBrand').value.trim(),positioning:document.getElementById('setPositioning').value.trim(),audience:document.getElementById('setAudience').value.trim(),voice:document.getElementById('setVoice').value.trim(),kws:document.getElementById('setKws').value.trim()};
+  saveStore('mktBrandKit',S.brandKit);
+  if(S.brandKit.kws){S.pKws.main=[...new Set(S.brandKit.kws.split(/[,，]/).map(k=>k.trim()).filter(Boolean))];renderKws();}
+  alert('✅ 品牌知識庫已儲存！');
+}
+function togglePref(key,btn){S.prefs[key]=!S.prefs[key];btn.className='toggle'+(S.prefs[key]?' on':'');saveStore('mktPrefs',S.prefs);}
+function resetStats(){if(!confirm('確定重置？'))return;S.stats={scans:0,posts:0,saved:0};saveStore('mktStats',S.stats);document.getElementById('statScans').textContent=0;document.getElementById('statPosts').textContent=0;document.getElementById('statSaved').textContent=0;}
+
+// ============================================================
+// UTILS
+// ============================================================
+
+function copyStep5(btn){const txt=document.getElementById('step5EditArea').value.trim();if(!txt){alert('請先填入修改後的貼文！');return;}navigator.clipboard.writeText(txt).then(()=>{if(btn){const o=btn.textContent;btn.textContent='已複製！';setTimeout(()=>btn.textContent=o,1500);}});}
+function saveStep5(){
+  const txt=document.getElementById('step5EditArea').value.trim();
+  if(!txt){alert('請先填入修改後的貼文！');return;}
+  const titleEl=document.getElementById('postTitleDisplay');
+  const title=titleEl?titleEl.value.trim():S.chosenTitle||'';
+  savePost({platform:document.getElementById('titlePlatform')?document.getElementById('titlePlatform').value:'',topic:S.chosenTopic||'',title,post:txt,scores:{},time:new Date().toISOString()});
+  alert('✅ 已儲存修改後的貼文！');
+}
+
+function copyText(textOrEnc,btn,isEnc=false){
+  const text=isEnc?decodeURIComponent(textOrEnc):textOrEnc;
+  navigator.clipboard.writeText(text).then(()=>{if(btn){const o=btn.textContent;btn.textContent='已複製！';setTimeout(()=>btn.textContent=o,1500);}});
+}
+function downloadFile(content,filename,mime){
+  const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+init();
+</script>
+</body>
+</html>
